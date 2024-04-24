@@ -12,12 +12,12 @@ const bcrypt = require("bcrypt");
 router.post('/register', async (req, res, next) => {
   try{
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(plainTextPassword, saltRounds);
-    
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
     const registeredUser = await prisma.user.create({
       data: {
         username: req.body.username,
-        plainTextPassword: req.body.password
+        password: hashedPassword
       }
     });
     //token will be allocated to user id
@@ -34,22 +34,16 @@ router.post('/register', async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try{
     const currentUser = await prisma.user.findUnique({
-      where: {
-        username: req.body.username,
-        plainTextPassword: req.body.password
-      }
+      where: { username: req.body.username}
     });
-    if (!currentUser){
-      return res.status(401).send("Cannot find user.");
+    const passwordsMatch = await bcrypt.compare(req.body.password, currentUser?.password); //by using the ? if there is no user it results to null
+
+    if (!currentUser || !passwordsMatch){
+      res.status(401).send("Cannot find user.");
     } else {
-      const passwordsMatch = await bcrypt.compare(plainTextPassword, user.password);
-    }
-    if(passwordsMatch){
       const token = jwt.sign({ id: currentUser.id}, process.env.JWT_SECRET);
       res.send({ token });
-    } else {
-      res.sendStatus(401);
-    }
+    } 
   } catch(error) {
     next(error);
   }

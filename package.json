@@ -5,7 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "npx prisma migrate reset && node server/db/seed",
+    "seed": "npx prisma migrate reset && node db/seed",
     "server": "nodemon server"
   },
   "keywords": [],
